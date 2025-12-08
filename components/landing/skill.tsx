@@ -31,7 +31,7 @@ export default function Skill() {
     },
   ];
   return (
-    <div className="flex flex-col  py-8 gap-6">
+    <div className="flex flex-col  py-8 gap-6 md:py-30">
       <TextTitle
         title="What I Can Do For You"
         description="I can help you with the following:"

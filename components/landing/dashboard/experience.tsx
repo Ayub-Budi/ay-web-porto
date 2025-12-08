@@ -45,7 +45,7 @@ export default function Experience() {
   };
 
   return (
-    <div className="flex flex-col py-8 gap-6">
+    <div className="flex flex-col py-8 md:py-30 gap-6">
       <TextTitle
         title="Experience"
         description="My experience in web development and other related fields"
