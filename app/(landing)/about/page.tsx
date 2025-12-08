@@ -1,4 +1,5 @@
 import TextTitle from "@/components/landing/text/title";
+import Experience from "@/components/landing/dashboard/experience";
 import Image from "next/image";
 export default function About() {
   return (
@@ -39,23 +40,8 @@ export default function About() {
           </div>
         </div>
       </div>
-      {/* <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-2">
-          <TextTitle title="Experience" description="This is experience" />
-          <hr />
-          <div>
-            <h3 className="text-sm sm:text-lg font-bold">
-              Front-End Developer
-            </h3>
-            <h4 className="text-xs sm:text-sm text-gray-400">
-              Gmedia (Pt. Media Sarana Data) | Sep 2024 - Present
-            </h4>
-            <p className="text-gray-400 text-xs lg:text-base">
-                Mengembangkan dan memelihara antarmuka pengguna menggunakan teknologi modern
-            </p>
-          </div>
-        </div>
-      </div> */}
+
+      <Experience />
 
       
     </div>
