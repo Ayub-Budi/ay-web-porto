@@ -1,0 +1,21 @@
+// Scene colors, tuned against the page tokens in app/globals.css.
+export const palette = {
+  night: "#0f1b2d",
+  wall: "#1b2b44",
+  floor: "#152236",
+  rug: "#24344d",
+  wood: "#6a4630",
+  woodDark: "#3f2b1f",
+  metal: "#2c3648",
+  plastic: "#d9e0ea",
+  screen: "#0b1626",
+  sodium: "#f2902b",
+  lampLight: "#ffb25e",
+  screenGlow: "#7fb2ff",
+  paper: "#e9e4d6",
+  pcb: "#1f7a55",
+  breadboard: "#ece9e0",
+  leaf: "#3f8f5a",
+  pot: "#b8643f",
+  building: "#101c30",
+} as const;
