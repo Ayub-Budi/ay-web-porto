@@ -24,10 +24,13 @@ function setFov(camera: Camera, fov: number) {
 export default function CameraRig({
   stops,
   store,
+  revealed,
   reducedMotion,
 }: Readonly<{
   stops: CameraStop[];
   store: NavigationStore;
+  // Until the room is revealed the camera holds at the doorway.
+  revealed: boolean;
   reducedMotion: boolean;
 }>) {
   const camera = useThree((state) => state.camera);
@@ -41,6 +44,16 @@ export default function CameraRig({
 
   useEffect(() => {
     setFov(camera, portrait ? FOV.portrait : FOV.landscape);
+
+    if (!revealed) {
+      // Hold at the doorway, facing the desk, while the loader covers.
+      goal.position.copy(camera.position);
+      goal.lookAt.set(0, 1.2, -2.5);
+      goal.look.copy(goal.lookAt);
+      camera.lookAt(goal.look);
+      invalidate();
+      return;
+    }
 
     const aim = (snap: boolean) => {
       const stop = stops[store.get()] ?? stops[0];
@@ -67,7 +80,7 @@ export default function CameraRig({
       aim(false);
     }
     return store.subscribe(() => aim(reducedMotion));
-  }, [camera, goal, invalidate, portrait, reducedMotion, stops, store]);
+  }, [camera, goal, invalidate, portrait, revealed, reducedMotion, stops, store]);
 
   useFrame((_, delta) => {
     const t = 1 - Math.exp(-Math.min(delta, 0.1) * SPEED);

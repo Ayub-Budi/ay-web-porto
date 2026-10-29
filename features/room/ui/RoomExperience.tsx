@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/get-dictionary";
 import type { RoomContent } from "../domain/room-content";
@@ -12,8 +11,8 @@ import { useQuality } from "../state/quality-snapshot";
 import { useViewMode } from "../state/view-mode";
 import ContentPanel from "./ContentPanel";
 import SectionNav from "./SectionNav";
-import Vignette from "./Vignette";
-import CalloutLayer from "./CalloutLayer";
+import ImmersiveRoom from "./ImmersiveRoom";
+import RoomLoader from "./RoomLoader";
 import { createCalloutRegistry } from "../state/callout-registry";
 
 const sectionOf = (hotspot: HotspotDefinition) => hotspot.section ?? hotspot.id;
@@ -27,8 +26,6 @@ function positionInSection(hotspots: HotspotDefinition[], index: number) {
   if (next) return "first";
   return "single";
 }
-
-const RoomCanvas = dynamic(() => import("../scene/RoomCanvas"), { ssr: false });
 
 export default function RoomExperience({
   content,
@@ -46,6 +43,9 @@ export default function RoomExperience({
   // The server and hydration render 2D; the room mounts once the device and
   // the visitor's chosen mode are known.
   const immersive = mode === "3d" && quality?.render3D === true;
+  // Until the client knows, keep the page covered: most visitors get the
+  // room, and this avoids flashing the flat layout first.
+  const deciding = quality === null || mode === null;
 
   // Scroll position decides the active hotspot.
   useEffect(() => {
@@ -78,24 +78,16 @@ export default function RoomExperience({
 
   return (
     <div className="relative">
+      {deciding && <RoomLoader label={dict.room.loading} progress={null} done={false} />}
       {immersive && quality && (
-        <div aria-hidden className="sticky top-0 h-svh -mb-[100svh]">
-          <RoomCanvas
-            hotspots={hotspots}
-            store={store}
-            quality={quality}
-            onSelect={select}
-            callouts={callouts}
-            loadingLabel={dict.room.loading}
-          />
-          <Vignette hotspots={hotspots} store={store} />
-          <CalloutLayer
-            hotspots={hotspots}
-            store={store}
-            registry={callouts}
-            onSelect={(id) => select(hotspots.findIndex((h) => h.id === id))}
-          />
-        </div>
+        <ImmersiveRoom
+          hotspots={hotspots}
+          store={store}
+          quality={quality}
+          callouts={callouts}
+          onSelect={select}
+          loadingLabel={dict.room.loading}
+        />
       )}
 
       {hotspots.map((hotspot, index) => (

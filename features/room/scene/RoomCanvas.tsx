@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useProgress } from "@react-three/drei";
 import type { HotspotDefinition } from "../domain/hotspot";
 import type { QualityProfile } from "../domain/quality";
@@ -13,17 +13,26 @@ import CalloutProjector from "./CalloutProjector";
 import type { CalloutRegistry } from "../state/callout-registry";
 import { ActiveHotspotProvider } from "../state/active-hotspot";
 
-function LoadingOverlay({ label }: Readonly<{ label: string }>) {
-  const { active, progress } = useProgress();
-  if (!active) return null;
-  return (
-    <p
-      role="status"
-      className="absolute inset-x-0 bottom-8 text-center text-sm text-fog"
-    >
-      {label} {Math.round(progress)}%
-    </p>
-  );
+// Reports texture/asset loading (0–100). Its first call also tells the page
+// that the 3D code itself has arrived.
+function ProgressReporter({ onProgress }: Readonly<{ onProgress: (p: number) => void }>) {
+  const { progress } = useProgress();
+  useEffect(() => onProgress(progress), [progress, onProgress]);
+  return null;
+}
+
+// Mounted inside the Suspense boundary, so it only runs once every model and
+// texture has resolved; fires after the first full frame is on screen.
+function ReadySignal({ onReady }: Readonly<{ onReady: () => void }>) {
+  const invalidate = useThree((state) => state.invalidate);
+  const fired = useRef(false);
+  useEffect(() => invalidate(), [invalidate]);
+  useFrame(() => {
+    if (fired.current) return;
+    fired.current = true;
+    requestAnimationFrame(() => onReady());
+  });
+  return null;
 }
 
 // Loaded with next/dynamic so three.js never blocks the first paint.
@@ -33,14 +42,20 @@ export default function RoomCanvas({
   quality,
   onSelect,
   callouts,
-  loadingLabel,
+  revealed,
+  onProgress,
+  onReady,
 }: Readonly<{
   hotspots: HotspotDefinition[];
   store: NavigationStore;
   quality: QualityProfile;
   onSelect: (index: number) => void;
   callouts: CalloutRegistry;
-  loadingLabel: string;
+  // False while the loader still covers the room; the camera waits at the
+  // door until then so the walk-in is seen.
+  revealed: boolean;
+  onProgress: (progress: number) => void;
+  onReady: () => void;
 }>) {
   const stops = useMemo(() => hotspots.map((h) => h.camera), [hotspots]);
   const ids = useMemo(() => hotspots.map((h) => h.id), [hotspots]);
@@ -67,16 +82,18 @@ export default function RoomCanvas({
                 </Selectable>
               ) : null,
             )}
+            <ReadySignal onReady={onReady} />
           </Suspense>
           <CalloutProjector registry={callouts} />
         </ActiveHotspotProvider>
         <CameraRig
           stops={stops}
           store={store}
+          revealed={revealed}
           reducedMotion={quality.reducedMotion}
         />
       </Canvas>
-      <LoadingOverlay label={loadingLabel} />
+      <ProgressReporter onProgress={onProgress} />
     </>
   );
 }
